@@ -70,6 +70,8 @@ pulldown-cmark = { version = "0.13", default-features = false, features = ["html
 libc = "0.2"
 
 # Inline images
+# Note: the Sixel protocol is compiled in unconditionally (no cargo feature
+# gate in ratatui-image v10); the picker probes the terminal at startup.
 ratatui-image = { version = "10", default-features = false, features = [
   "crossterm",
 ] }

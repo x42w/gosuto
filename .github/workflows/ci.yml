@@ -101,3 +101,11 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
         env:
           RUSTFLAGS: ${{ matrix.os == 'windows-latest' && '-C target-feature=+crt-static' || '' }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gosuto-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/gosuto${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          if-no-files-found: error
+          retention-days: 7

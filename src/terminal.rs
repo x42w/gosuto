@@ -70,7 +70,11 @@ pub fn init_keyboard_enhancement() {
 }
 
 pub fn init_picker() -> ratatui_image::picker::Picker {
-    ratatui_image::picker::Picker::halfblocks()
+    // Probe the terminal for image protocol support (Sixel, Kitty, iTerm2)
+    // and fall back to halfblocks when the terminal can't be queried or
+    // doesn't support a fancier protocol.
+    ratatui_image::picker::Picker::from_query_stdio()
+        .unwrap_or_else(|_| ratatui_image::picker::Picker::halfblocks())
 }
 
 /// Redirect stdout (fd 1) to `/dev/null`, returning the saved original fd.

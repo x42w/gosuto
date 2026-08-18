@@ -53,7 +53,10 @@ pub(crate) fn truncate_preview(text: &str, max_len: usize) -> String {
     if first_line.len() <= max_len {
         first_line.to_string()
     } else {
-        format!("{}...", &first_line[..max_len])
+        // Slice at a char boundary: max_len may fall inside a multi-byte
+        // UTF-8 sequence (e.g. CJK, emoji), which would panic.
+        let cut = first_line.floor_char_boundary(max_len);
+        format!("{}...", &first_line[..cut])
     }
 }
 

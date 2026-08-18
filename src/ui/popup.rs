@@ -49,7 +49,10 @@ pub fn fill_bg(buf: &mut Buffer, bounds: &Rect, popup: Rect) {
 
 pub fn truncate_str(s: &str, max: usize) -> String {
     if s.len() > max {
-        format!("{}…", &s[..max.saturating_sub(1)])
+        // Slice at a char boundary: max may fall inside a multi-byte
+        // UTF-8 sequence (e.g. CJK, emoji), which would panic.
+        let cut = s.floor_char_boundary(max.saturating_sub(1));
+        format!("{}…", &s[..cut])
     } else {
         s.to_string()
     }
@@ -144,5 +147,37 @@ pub fn history_visibility_description(value: &str) -> &'static str {
         "joined" => "See history from when joined",
         "world_readable" => "Anyone can read full history",
         _ => "",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn truncate_str_short_unchanged() {
+        assert_eq!(truncate_str("---炸", 50), "---炸");
+    }
+
+    #[test]
+    fn truncate_str_safe_with_multibyte() {
+        // 30 x "炸" = 90 bytes; cut lands mid-char, must not panic.
+        let s = "炸".repeat(30);
+        let t = truncate_str(&s, 50);
+        assert!(t.ends_with('…'));
+        // floor(49) = 48 bytes = 16 chars, then the ellipsis.
+        assert_eq!(t, format!("{}…", "炸".repeat(16)));
+        assert!(std::str::from_utf8(t.as_bytes()).is_ok());
+    }
+
+    #[test]
+    fn truncate_str_truncates_ascii() {
+        assert_eq!(truncate_str("hello world", 5), "hell…");
+        assert_eq!(truncate_str("hello", 5), "hello");
+    }
+
+    #[test]
+    fn truncate_str_zero_max() {
+        assert_eq!(truncate_str("hello", 0), "…");
     }
 }

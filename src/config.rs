@@ -300,8 +300,8 @@ mod tests {
     fn default_config_values() {
         let config = GosutoConfig::default();
         assert!(!config.network.accept_invalid_certs);
-        assert!(config.effects.rain);
-        assert!(config.effects.glitch);
+        assert!(!config.effects.rain);
+        assert!(!config.effects.glitch);
         assert!(!config.ui.use_nerd_fonts);
     }
 
@@ -354,9 +354,9 @@ use_nerd_fonts = true
     }
 
     #[test]
-    fn effects_default_enabled() {
+    fn effects_default_disabled() {
         let effects = EffectsConfig::default();
-        assert!(effects.rain);
-        assert!(effects.glitch);
+        assert!(!effects.rain);
+        assert!(!effects.glitch);
     }
 }

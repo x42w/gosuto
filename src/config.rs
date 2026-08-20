@@ -110,9 +110,9 @@ fn default_vad_hold_ms() -> u64 {
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct EffectsConfig {
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub rain: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub glitch: bool,
 }
 
@@ -123,8 +123,8 @@ fn default_true() -> bool {
 impl Default for EffectsConfig {
     fn default() -> Self {
         Self {
-            rain: true,
-            glitch: true,
+            rain: false,
+            glitch: false,
         }
     }
 }

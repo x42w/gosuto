@@ -77,7 +77,6 @@ impl App {
                                 } else {
                                     let room_id = room.id.clone();
                                     self.messages.set_room(Some(room_id));
-                                    self.chat_title_reveal.trigger();
                                 }
                             }
                         }

@@ -173,26 +173,13 @@ impl TransmissionPopup {
     }
 
     fn state_color(&self) -> Color {
-        let t = self.color_blend;
-        // MAGENTA (255,0,255) -> CYAN (0,255,255)
-        let r = (255.0 * (1.0 - t)) as u8;
-        let g = (255.0 * t) as u8;
-        Color::Rgb(r, g, 255)
+        // Monochrome: static gray, no magenta→cyan sweep.
+        Color::Rgb(150, 150, 150)
     }
 
     fn pulse_color(&self) -> Color {
-        let base = self.state_color();
-        let brightness = (self.pulse_phase.sin() + 1.0) / 2.0;
-        let factor = 0.35 + brightness * 0.65;
-        if let Color::Rgb(r, g, b) = base {
-            Color::Rgb(
-                (r as f32 * factor) as u8,
-                (g as f32 * factor) as u8,
-                (b as f32 * factor) as u8,
-            )
-        } else {
-            base
-        }
+        // Monochrome: no brightness pulse; keep a flat gray.
+        self.state_color()
     }
 
     fn render_border(&self, buf: &mut Buffer, bounds: &Rect, area: Rect, color: Color) {

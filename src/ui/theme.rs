@@ -9,13 +9,10 @@ pub const CYAN: Color = Color::Rgb(160, 160, 160);
 pub const MAGENTA: Color = Color::Rgb(140, 140, 140);
 pub const GREEN: Color = Color::Rgb(150, 150, 150);
 pub const RED: Color = Color::Rgb(175, 175, 175);
-pub const YELLOW: Color = Color::Rgb(150, 150, 150);
-pub const BLUE: Color = Color::Rgb(135, 135, 135);
 pub const TEXT: Color = Color::Rgb(205, 205, 205);
 pub const DIM: Color = Color::Rgb(125, 125, 125);
 pub const BORDER: Color = Color::Rgb(85, 85, 85);
 pub const BLACK: Color = Color::Rgb(20, 20, 20);
-pub const WHITE: Color = Color::Rgb(230, 230, 230);
 
 // Mode indicator colors
 pub const NORMAL_MODE_BG: Color = Color::Rgb(110, 110, 110);

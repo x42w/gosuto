@@ -48,14 +48,17 @@ fn write_char_advance(
         cell.set_style(style);
         cell.skip = false;
     }
-    *x += 1;
-    if width > 1 && cx + 1 < bounds.x + bounds.width {
-        let cont = &mut buf[(cx + 1, y)];
-        cont.set_char(' ');
-        cont.set_style(style);
-        cont.skip = true;
+    if width > 1 {
+        if cx + 1 < bounds.x + bounds.width {
+            let cont = &mut buf[(cx + 1, y)];
+            cont.set_char(' ');
+            cont.set_style(style);
+            cont.skip = true;
+        }
+        *x += 2;
+    } else {
+        *x += 1;
     }
-    *x += 1;
 }
 
 /// Write a string clipped to the given rectangle. Returns `true` if the text was truncated.

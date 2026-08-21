@@ -5,6 +5,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
 };
+use unicode_width::UnicodeWidthChar;
 
 use crate::app::App;
 use crate::input::VimMode;
@@ -174,15 +175,21 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
 
         // Write gradient mode indicator for first section
         let section_bg = if i == 0 {
-            // Gradient bg across mode label width
-            let char_count = section.text.chars().count();
-            for (ci, ch) in section.text.chars().enumerate() {
-                if cursor_x + ci as u16 >= area.x + area.width {
+            // Gradient bg across mode label's display width (wide chars = 2 cells)
+            let total_width: u16 = section
+                .text
+                .chars()
+                .map(|c| UnicodeWidthChar::width(c).unwrap_or(0).max(1) as u16)
+                .sum();
+            let mut cell_offset = 0u16;
+            for ch in section.text.chars() {
+                if cursor_x + cell_offset >= area.x + area.width {
                     break;
                 }
-                let x = cursor_x + ci as u16;
+                let x = cursor_x + cell_offset;
+                let ch_w = UnicodeWidthChar::width(ch).unwrap_or(0);
                 if x < bounds.x + bounds.width && area.y < bounds.y + bounds.height {
-                    let t = ci as f32 / char_count.max(1) as f32;
+                    let t = cell_offset as f32 / total_width.max(1) as f32;
                     let bg = gradient::lerp_color(section.bg, mode_bg_dim, t);
                     let mut style = Style::default().fg(section.fg).bg(bg);
                     if section.bold {
@@ -191,9 +198,24 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                     let cell = &mut buf[(x, area.y)];
                     cell.set_char(ch);
                     cell.set_style(style);
+                    cell.skip = false;
+                    if ch_w > 1 {
+                        // Continuation cell for wide char
+                        if x + 1 < bounds.x + bounds.width {
+                            let cont = &mut buf[(x + 1, area.y)];
+                            cont.set_char(' ');
+                            cont.set_style(style);
+                            cont.skip = true;
+                        }
+                        cell_offset += 2;
+                    } else {
+                        cell_offset += 1;
+                    }
+                } else {
+                    cell_offset += ch_w.max(1) as u16;
                 }
             }
-            cursor_x += char_count as u16;
+            cursor_x += cell_offset;
             mode_bg_dim
         } else {
             // Regular section text
@@ -205,12 +227,26 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                 if cursor_x >= area.x + area.width {
                     break;
                 }
+                let ch_w = UnicodeWidthChar::width(ch).unwrap_or(0);
                 if cursor_x < bounds.x + bounds.width && area.y < bounds.y + bounds.height {
                     let cell = &mut buf[(cursor_x, area.y)];
                     cell.set_char(ch);
                     cell.set_style(style);
+                    cell.skip = false;
+                    if ch_w > 1 {
+                        if cursor_x + 1 < bounds.x + bounds.width {
+                            let cont = &mut buf[(cursor_x + 1, area.y)];
+                            cont.set_char(' ');
+                            cont.set_style(style);
+                            cont.skip = true;
+                        }
+                        cursor_x += 2;
+                    } else {
+                        cursor_x += 1;
+                    }
+                } else {
+                    cursor_x += ch_w.max(1) as u16;
                 }
-                cursor_x += 1;
             }
             section.bg
         };

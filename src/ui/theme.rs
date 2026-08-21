@@ -1,36 +1,36 @@
 use ratatui::style::{Color, Modifier, Style};
 
-// Core palette (Tokyo Night "night" variant)
-pub const BG: Color = Color::Rgb(12, 14, 20);
-pub const SIDEBAR_BG: Color = Color::Rgb(22, 22, 30);
-pub const CHAT_BG: Color = Color::Rgb(26, 27, 38);
-pub const CYAN: Color = Color::Rgb(0, 255, 255);
-pub const MAGENTA: Color = Color::Rgb(255, 0, 255);
-pub const GREEN: Color = Color::Rgb(158, 206, 106);
-pub const RED: Color = Color::Rgb(247, 118, 142);
-pub const YELLOW: Color = Color::Rgb(224, 175, 104);
-pub const BLUE: Color = Color::Rgb(122, 162, 247);
-pub const TEXT: Color = Color::Rgb(192, 202, 245);
-pub const DIM: Color = Color::Rgb(115, 122, 162);
-pub const BORDER: Color = Color::Rgb(57, 75, 112);
-pub const BLACK: Color = Color::Rgb(21, 22, 30);
-pub const WHITE: Color = Color::Rgb(255, 255, 255);
+// Monochrome gray palette — intentionally unremarkable.
+// All UI is gray-on-gray; emphasis is expressed via brightness only.
+pub const BG: Color = Color::Rgb(18, 18, 18);
+pub const SIDEBAR_BG: Color = Color::Rgb(24, 24, 24);
+pub const CHAT_BG: Color = Color::Rgb(22, 22, 22);
+pub const CYAN: Color = Color::Rgb(160, 160, 160);
+pub const MAGENTA: Color = Color::Rgb(140, 140, 140);
+pub const GREEN: Color = Color::Rgb(150, 150, 150);
+pub const RED: Color = Color::Rgb(175, 175, 175);
+pub const YELLOW: Color = Color::Rgb(150, 150, 150);
+pub const TEXT: Color = Color::Rgb(205, 205, 205);
+pub const DIM: Color = Color::Rgb(125, 125, 125);
+pub const BORDER: Color = Color::Rgb(85, 85, 85);
+pub const BLACK: Color = Color::Rgb(20, 20, 20);
+pub const WHITE: Color = Color::Rgb(230, 230, 230);
 
 // Mode indicator colors
-pub const NORMAL_MODE_BG: Color = BLUE;
-pub const INSERT_MODE_BG: Color = GREEN;
-pub const COMMAND_MODE_BG: Color = MAGENTA;
+pub const NORMAL_MODE_BG: Color = Color::Rgb(110, 110, 110);
+pub const INSERT_MODE_BG: Color = Color::Rgb(150, 150, 150);
+pub const COMMAND_MODE_BG: Color = Color::Rgb(95, 95, 95);
 
-// Sender name palette (rotating)
+// Sender name palette (rotating gray shades, no hue)
 pub const SENDER_COLORS: &[Color] = &[
-    CYAN,
-    MAGENTA,
-    Color::Rgb(158, 206, 106), // green
-    Color::Rgb(255, 158, 100), // orange
-    Color::Rgb(224, 175, 104), // yellow
-    Color::Rgb(122, 162, 247), // blue
-    Color::Rgb(247, 118, 142), // red
-    Color::Rgb(42, 195, 222),  // blue1
+    Color::Rgb(160, 160, 160),
+    Color::Rgb(140, 140, 140),
+    Color::Rgb(180, 180, 180),
+    Color::Rgb(120, 120, 120),
+    Color::Rgb(195, 195, 195),
+    Color::Rgb(135, 135, 135),
+    Color::Rgb(170, 170, 170),
+    Color::Rgb(110, 110, 110),
 ];
 
 pub fn sender_color(sender: &str) -> Color {
@@ -39,36 +39,37 @@ pub fn sender_color(sender: &str) -> Color {
 }
 
 // Semantic colors
-pub const HIGHLIGHT_BG: Color = Color::Rgb(41, 46, 66);
-pub const MUTED: Color = Color::Rgb(59, 66, 97);
-pub const BAR_EMPTY: Color = Color::Rgb(65, 72, 104);
-pub const METER_EMPTY: Color = Color::Rgb(41, 46, 66);
-pub const MESSAGE_SELECT_BG: Color = Color::Rgb(40, 52, 87);
-pub const REPLY_INDICATOR: Color = Color::Rgb(122, 162, 247);
-pub const REACTION_BG: Color = Color::Rgb(41, 46, 66);
-pub const REACTION_OWN_BG: Color = Color::Rgb(57, 75, 112);
-pub const EDIT_INDICATOR: Color = Color::Rgb(115, 218, 202);
+pub const HIGHLIGHT_BG: Color = Color::Rgb(40, 40, 40);
+pub const MUTED: Color = Color::Rgb(70, 70, 70);
+pub const BAR_EMPTY: Color = Color::Rgb(80, 80, 80);
+pub const METER_EMPTY: Color = Color::Rgb(45, 45, 45);
+pub const MESSAGE_SELECT_BG: Color = Color::Rgb(48, 48, 48);
+pub const REPLY_INDICATOR: Color = Color::Rgb(150, 150, 150);
+pub const REACTION_BG: Color = Color::Rgb(42, 42, 42);
+pub const REACTION_OWN_BG: Color = Color::Rgb(75, 75, 75);
+pub const EDIT_INDICATOR: Color = Color::Rgb(165, 165, 165);
 
-// Gradient endpoints (neon — kept as-is)
-pub const GRADIENT_BORDER_START: Color = Color::Rgb(0, 255, 255); // CYAN
-pub const GRADIENT_BORDER_END: Color = Color::Rgb(255, 0, 255); // MAGENTA
-pub const GRADIENT_TITLE_END: Color = Color::Rgb(100, 255, 255); // lighter cyan
-pub const GRADIENT_HIGHLIGHT_START: Color = Color::Rgb(0, 255, 255); // bright left edge
-pub const GRADIENT_HIGHLIGHT_END: Color = Color::Rgb(0, 80, 120); // deep teal right edge
-pub const GRADIENT_DATE_BRIGHT: Color = Color::Rgb(115, 122, 162); // center of date sep (TN dark5)
-pub const GRADIENT_DATE_DIM: Color = Color::Rgb(59, 66, 97); // edge of date sep (TN fg_gutter)
-pub const STATUS_BAR_BG: Color = Color::Rgb(22, 22, 30);
-pub const UNREAD_BADGE_BG: Color = Color::Rgb(57, 75, 112);
-pub const TIMESTAMP_BRIGHT: Color = Color::Rgb(115, 122, 162);
-pub const INPUT_BORDER_CYAN_DIM: Color = Color::Rgb(0, 160, 160); // darker cyan
-pub const INPUT_BORDER_MAGENTA_DIM: Color = Color::Rgb(160, 0, 160); // darker magenta
+// Gradient endpoints — same gray at both ends so gradients render as flat,
+// static gray (no animated color sweep).
+pub const GRADIENT_BORDER_START: Color = Color::Rgb(110, 110, 110);
+pub const GRADIENT_BORDER_END: Color = Color::Rgb(110, 110, 110);
+pub const GRADIENT_TITLE_END: Color = Color::Rgb(160, 160, 160);
+pub const GRADIENT_HIGHLIGHT_START: Color = Color::Rgb(50, 50, 50);
+pub const GRADIENT_HIGHLIGHT_END: Color = Color::Rgb(50, 50, 50);
+pub const GRADIENT_DATE_BRIGHT: Color = Color::Rgb(120, 120, 120);
+pub const GRADIENT_DATE_DIM: Color = Color::Rgb(70, 70, 70);
+pub const STATUS_BAR_BG: Color = Color::Rgb(26, 26, 26);
+pub const UNREAD_BADGE_BG: Color = Color::Rgb(80, 80, 80);
+pub const TIMESTAMP_BRIGHT: Color = Color::Rgb(120, 120, 120);
+pub const INPUT_BORDER_CYAN_DIM: Color = Color::Rgb(95, 95, 95);
+pub const INPUT_BORDER_MAGENTA_DIM: Color = Color::Rgb(95, 95, 95);
 
 // Rich text / formatted message colors
-pub const CODE_INLINE_FG: Color = Color::Rgb(187, 154, 247);
-pub const CODE_INLINE_BG: Color = Color::Rgb(41, 46, 66);
-pub const CODE_BLOCK_BG: Color = Color::Rgb(22, 22, 30);
-pub const LINK_FG: Color = Color::Rgb(122, 162, 247);
-pub const BLOCKQUOTE_FG: Color = Color::Rgb(115, 122, 162);
+pub const CODE_INLINE_FG: Color = Color::Rgb(175, 175, 175);
+pub const CODE_INLINE_BG: Color = Color::Rgb(40, 40, 40);
+pub const CODE_BLOCK_BG: Color = Color::Rgb(26, 26, 26);
+pub const LINK_FG: Color = Color::Rgb(160, 160, 160);
+pub const BLOCKQUOTE_FG: Color = Color::Rgb(120, 120, 120);
 
 // Composite styles
 pub fn border_style() -> Style {

@@ -173,26 +173,13 @@ impl TransmissionPopup {
     }
 
     fn state_color(&self) -> Color {
-        let t = self.color_blend;
-        // MAGENTA (255,0,255) -> CYAN (0,255,255)
-        let r = (255.0 * (1.0 - t)) as u8;
-        let g = (255.0 * t) as u8;
-        Color::Rgb(r, g, 255)
+        // Monochrome: static gray, no magenta→cyan sweep.
+        Color::Rgb(150, 150, 150)
     }
 
     fn pulse_color(&self) -> Color {
-        let base = self.state_color();
-        let brightness = (self.pulse_phase.sin() + 1.0) / 2.0;
-        let factor = 0.35 + brightness * 0.65;
-        if let Color::Rgb(r, g, b) = base {
-            Color::Rgb(
-                (r as f32 * factor) as u8,
-                (g as f32 * factor) as u8,
-                (b as f32 * factor) as u8,
-            )
-        } else {
-            base
-        }
+        // Monochrome: no brightness pulse; keep a flat gray.
+        self.state_color()
     }
 
     fn render_border(&self, buf: &mut Buffer, bounds: &Rect, area: Rect, color: Color) {
@@ -385,7 +372,11 @@ impl TransmissionPopup {
         // VOICE right-aligned
         let voice = format!("{} VOICE", icons.voice);
         let voice = voice.as_str();
-        let vx = right.saturating_sub(voice.chars().count() as u16);
+        let voice_width: usize = voice
+            .chars()
+            .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+            .sum();
+        let vx = right.saturating_sub(voice_width as u16);
         popup::write_str(
             buf,
             bounds,
@@ -545,7 +536,14 @@ impl TransmissionPopup {
             ],
         };
 
-        let total: usize = segments.iter().map(|(t, _, _)| t.chars().count()).sum();
+        let total: usize = segments
+            .iter()
+            .map(|(t, _, _)| {
+                t.chars()
+                    .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+                    .sum::<usize>()
+            })
+            .sum();
         let inner = area.width.saturating_sub(2) as usize;
         let offset = inner.saturating_sub(total) / 2;
         let mut x = area.x + 1 + offset as u16;
@@ -556,7 +554,10 @@ impl TransmissionPopup {
                 s = s.add_modifier(Modifier::BOLD);
             }
             popup::write_str(buf, bounds, x, row, text, s);
-            x += text.chars().count() as u16;
+            x += text
+                .chars()
+                .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+                .sum::<usize>() as u16;
         }
     }
 }

@@ -14,10 +14,9 @@ impl AnimationClock {
     }
 
     pub fn tick(&mut self, dt_ms: u64) {
-        self.phase += (dt_ms as f32 / 2000.0) * std::f32::consts::TAU;
-        if self.phase > std::f32::consts::TAU {
-            self.phase -= std::f32::consts::TAU;
-        }
+        // Border phase stays frozen at 0.0: the animated gradient sweep
+        // ("marquee" border) is intentionally disabled. Only the cursor
+        // blink keeps ticking.
         self.cursor_phase += (dt_ms as f32 / 1200.0) * std::f32::consts::TAU;
         if self.cursor_phase > std::f32::consts::TAU {
             self.cursor_phase -= std::f32::consts::TAU;

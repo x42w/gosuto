@@ -1,5 +1,6 @@
 use ratatui::Frame;
 use ratatui::style::Style;
+use unicode_width::UnicodeWidthChar;
 
 use crate::app::App;
 use crate::ui::popup;
@@ -40,7 +41,11 @@ pub fn render(app: &App, frame: &mut Frame) {
 
     let display_name = popup::truncate_str(room_name, inner_w);
     let y = popup_area.y + 3;
-    let x = left + (inner_w.saturating_sub(display_name.chars().count())) as u16 / 2;
+    let name_width: usize = display_name
+        .chars()
+        .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
+        .sum();
+    let x = left + (inner_w.saturating_sub(name_width)) as u16 / 2;
     popup::write_str(buf, &bounds, x, y, &display_name, text_style);
 
     popup::render_hint(

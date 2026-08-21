@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::Style;
 
 use crate::state::UserConfigState;
+use crate::ui::cells::write_str;
 use crate::ui::icons::Icons;
 use crate::ui::{form_field, popup, theme};
 
@@ -36,7 +37,7 @@ pub fn render(
         let msg = "Loading...";
         let mx = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
         let my = popup_area.y + popup_area.height / 2;
-        popup::write_str(buf, &bounds, mx, my, msg, theme::loading_style());
+        write_str(buf, &bounds, mx, my, msg, theme::loading_style());
         return;
     }
 
@@ -48,31 +49,31 @@ pub fn render(
     let mut row = popup_area.y + 2;
 
     // USER ID (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "USER ID", label_s);
+    write_str(buf, &bounds, label_x, row, "USER ID", label_s);
     let id_display = popup::truncate_str(&state.user_id, (right - value_x) as usize);
-    popup::write_str(buf, &bounds, value_x, row, &id_display, value_s);
+    write_str(buf, &bounds, value_x, row, &id_display, value_s);
     row += 1;
 
     // DEVICE ID (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "DEVICE ID", label_s);
+    write_str(buf, &bounds, label_x, row, "DEVICE ID", label_s);
     let dev_display = popup::truncate_str(&state.device_id, (right - value_x) as usize);
-    popup::write_str(buf, &bounds, value_x, row, &dev_display, value_s);
+    write_str(buf, &bounds, value_x, row, &dev_display, value_s);
     row += 1;
 
     // HOMESERVER (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "HOMESERVER", label_s);
+    write_str(buf, &bounds, label_x, row, "HOMESERVER", label_s);
     let hs_display = popup::truncate_str(&state.homeserver, (right - value_x) as usize);
-    popup::write_str(buf, &bounds, value_x, row, &hs_display, value_s);
+    write_str(buf, &bounds, value_x, row, &hs_display, value_s);
     row += 1;
 
     // VERIFIED (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "VERIFIED", label_s);
+    write_str(buf, &bounds, label_x, row, "VERIFIED", label_s);
     let (ver_text, ver_color) = if state.verified {
         ("yes", theme::GREEN)
     } else {
         ("no", theme::RED)
     };
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         value_x,
@@ -83,13 +84,13 @@ pub fn render(
     row += 1;
 
     // RECOVERY (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "RECOVERY", label_s);
+    write_str(buf, &bounds, label_x, row, "RECOVERY", label_s);
     let (rec_text, rec_color) = match state.recovery_status {
         crate::event::RecoveryStatus::Enabled => ("yes", theme::GREEN),
         crate::event::RecoveryStatus::Incomplete => ("incomplete", theme::YELLOW),
         crate::event::RecoveryStatus::Disabled => ("no", theme::RED),
     };
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         value_x,
@@ -139,7 +140,7 @@ pub fn render(
         row += 2;
         let msg = "saving...";
         let sx = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
-        popup::write_str(buf, &bounds, sx, row, msg, theme::saving_style());
+        write_str(buf, &bounds, sx, row, msg, theme::saving_style());
     }
 
     // Hints

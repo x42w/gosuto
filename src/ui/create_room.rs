@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::{Modifier, Style};
 
 use crate::state::{CreateRoomState, HISTORY_VISIBILITY_OPTIONS};
+use crate::ui::cells::write_str;
 use crate::ui::icons::Icons;
 use crate::ui::{form_field, popup, theme};
 
@@ -92,7 +93,7 @@ pub fn render(
     // History visibility description
     let desc = popup::history_visibility_description(&state.history_visibility);
     let desc_s = Style::default().fg(theme::DIM).bg(theme::BG);
-    popup::write_str(buf, &bounds, value_x, row, desc, desc_s);
+    write_str(buf, &bounds, value_x, row, desc, desc_s);
     row += 1;
 
     // ── Field 3: ENCRYPTED (toggle) ──
@@ -122,7 +123,7 @@ pub fn render(
     } else {
         Style::default().fg(theme::DIM).bg(theme::BG)
     };
-    popup::write_str(buf, &bounds, btn_x, row, btn_label, btn_style);
+    write_str(buf, &bounds, btn_x, row, btn_label, btn_style);
 
     // Show valid options hint
     let opts_row = popup_area.y + popup_area.height.saturating_sub(4);
@@ -132,7 +133,7 @@ pub fn render(
         HISTORY_VISIBILITY_OPTIONS.join(" | ")
     };
     let opts_x = left + (inner_w.saturating_sub(opts.len())) as u16 / 2;
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         opts_x,

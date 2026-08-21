@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::app::App;
 use crate::input::FocusPanel;
+use crate::ui::cells::display_width;
 use crate::ui::icons::Icons;
 use crate::ui::tooltip::{self, Direction};
 use crate::ui::{gradient, panel, theme};
@@ -166,7 +167,7 @@ pub fn render_tooltip(app: &App, frame: &mut Frame, members_area: Rect) {
     }
 
     // Check if label overflows (List widget adds 0 padding by default)
-    if label.chars().count() <= inner_width {
+    if display_width(&label) <= inner_width as u16 {
         return;
     }
 

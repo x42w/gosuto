@@ -4,6 +4,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 
 use crate::state::{VerificationModalState, VerificationStage};
+use crate::ui::cells::write_str;
 use crate::ui::theme;
 use crate::ui::{form_field, popup};
 
@@ -56,7 +57,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
                 } else {
                     Style::default().fg(color).bg(theme::BG)
                 };
-                popup::write_str(buf, &bounds, left, y_start + i as u16 * 2, &text, style);
+                write_str(buf, &bounds, left, y_start + i as u16 * 2, &text, style);
             }
 
             popup::render_hint(
@@ -69,7 +70,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
         VerificationStage::EnterUserId => {
             let label = "User ID:";
             let label_y = popup_area.y + 3;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 left,
@@ -100,7 +101,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
             let y = popup_area.y + popup_area.height / 2 - 1;
             let x1 = left + (inner_w.saturating_sub(line1.len())) as u16 / 2;
             let x2 = left + (inner_w.saturating_sub(line2.len())) as u16 / 2;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 x1,
@@ -109,7 +110,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
                 Style::default().fg(theme::TEXT).bg(theme::BG),
             );
             if cursor_visible {
-                popup::write_str(
+                write_str(
                     buf,
                     &bounds,
                     x2,
@@ -125,7 +126,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
             // Title line
             let title_msg = "Compare emoji on both devices:";
             let tx = left + (inner_w.saturating_sub(title_msg.len())) as u16 / 2;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 tx,
@@ -169,7 +170,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
             // Prompt
             let prompt = "Do these match? [y/n]";
             let px = left + (inner_w.saturating_sub(prompt.len())) as u16 / 2;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 px,
@@ -187,7 +188,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
             let msg = "Verification successful!";
             let x = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
             let y = popup_area.y + popup_area.height / 2;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 x,
@@ -205,7 +206,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
             let msg = "Verification failed";
             let x = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
             let y = popup_area.y + popup_area.height / 2 - 1;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 x,
@@ -219,7 +220,7 @@ pub fn render(state: &VerificationModalState, frame: &mut Frame, phase: f32, cur
 
             let reason_display = popup::truncate_str(reason, inner_w);
             let rx = left + (inner_w.saturating_sub(reason_display.len())) as u16 / 2;
-            popup::write_str(
+            write_str(
                 buf,
                 &bounds,
                 rx,
@@ -256,7 +257,7 @@ fn render_emoji_row(
 
         let desc = popup::truncate_str(description, slot_width);
         let desc_offset = (slot_width.saturating_sub(desc.len())) / 2;
-        popup::write_str(
+        write_str(
             buf,
             bounds,
             slot_x + desc_offset as u16,

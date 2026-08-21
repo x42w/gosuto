@@ -108,25 +108,16 @@ fn default_vad_hold_ms() -> u64 {
     300
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct EffectsConfig {
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub rain: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub glitch: bool,
 }
 
 fn default_true() -> bool {
     true
-}
-
-impl Default for EffectsConfig {
-    fn default() -> Self {
-        Self {
-            rain: true,
-            glitch: true,
-        }
-    }
 }
 
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
@@ -309,8 +300,8 @@ mod tests {
     fn default_config_values() {
         let config = GosutoConfig::default();
         assert!(!config.network.accept_invalid_certs);
-        assert!(config.effects.rain);
-        assert!(config.effects.glitch);
+        assert!(!config.effects.rain);
+        assert!(!config.effects.glitch);
         assert!(!config.ui.use_nerd_fonts);
     }
 
@@ -363,9 +354,9 @@ use_nerd_fonts = true
     }
 
     #[test]
-    fn effects_default_enabled() {
+    fn effects_default_disabled() {
         let effects = EffectsConfig::default();
-        assert!(effects.rain);
-        assert!(effects.glitch);
+        assert!(!effects.rain);
+        assert!(!effects.glitch);
     }
 }

@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::app::App;
 use crate::input::VimMode;
+use crate::ui::cells::{display_width, set_cell, write_char, write_chars_until};
 use crate::ui::{gradient, theme};
 use crate::voip::CallState;
 
@@ -158,14 +159,11 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
     // Fill entire bar with STATUS_BAR_BG
     let bar_style = Style::default().bg(theme::STATUS_BAR_BG);
     for x in area.x..area.x + area.width {
-        if x < bounds.x + bounds.width && area.y < bounds.y + bounds.height {
-            let cell = &mut buf[(x, area.y)];
-            cell.set_char(' ');
-            cell.set_style(bar_style);
-        }
+        set_cell(buf, &bounds, x, area.y, ' ', bar_style);
     }
 
     let mut cursor_x = area.x;
+    let section_end = area.x + area.width;
 
     for (i, section) in sections.iter().enumerate() {
         if section.text.is_empty() {
@@ -174,44 +172,38 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
 
         // Write gradient mode indicator for first section
         let section_bg = if i == 0 {
-            // Gradient bg across mode label width
-            let char_count = section.text.chars().count();
-            for (ci, ch) in section.text.chars().enumerate() {
-                if cursor_x + ci as u16 >= area.x + area.width {
+            // Gradient bg across mode label's display width (wide chars = 2 cells)
+            let total_width = display_width(&section.text).max(1);
+            let mut cell_offset = 0u16;
+            for ch in section.text.chars() {
+                if cursor_x + cell_offset >= section_end {
                     break;
                 }
-                let x = cursor_x + ci as u16;
-                if x < bounds.x + bounds.width && area.y < bounds.y + bounds.height {
-                    let t = ci as f32 / char_count.max(1) as f32;
-                    let bg = gradient::lerp_color(section.bg, mode_bg_dim, t);
-                    let mut style = Style::default().fg(section.fg).bg(bg);
-                    if section.bold {
-                        style = style.add_modifier(Modifier::BOLD);
-                    }
-                    let cell = &mut buf[(x, area.y)];
-                    cell.set_char(ch);
-                    cell.set_style(style);
+                let t = cell_offset as f32 / total_width as f32;
+                let bg = gradient::lerp_color(section.bg, mode_bg_dim, t);
+                let mut style = Style::default().fg(section.fg).bg(bg);
+                if section.bold {
+                    style = style.add_modifier(Modifier::BOLD);
                 }
+                cell_offset += write_char(buf, &bounds, cursor_x + cell_offset, area.y, ch, style);
             }
-            cursor_x += char_count as u16;
+            cursor_x += cell_offset;
             mode_bg_dim
         } else {
-            // Regular section text
+            // Regular section text, clipped to the bar
             let mut style = Style::default().fg(section.fg).bg(section.bg);
             if section.bold {
                 style = style.add_modifier(Modifier::BOLD);
             }
-            for ch in section.text.chars() {
-                if cursor_x >= area.x + area.width {
-                    break;
-                }
-                if cursor_x < bounds.x + bounds.width && area.y < bounds.y + bounds.height {
-                    let cell = &mut buf[(cursor_x, area.y)];
-                    cell.set_char(ch);
-                    cell.set_style(style);
-                }
-                cursor_x += 1;
-            }
+            cursor_x = write_chars_until(
+                buf,
+                &bounds,
+                cursor_x,
+                area.y,
+                section.text.chars(),
+                style,
+                section_end,
+            );
             section.bg
         };
 
@@ -221,14 +213,16 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
             .map(|s| s.bg)
             .unwrap_or(theme::STATUS_BAR_BG);
 
-        if cursor_x < area.x + area.width
-            && cursor_x < bounds.x + bounds.width
-            && area.y < bounds.y + bounds.height
-        {
+        if cursor_x < section_end {
             let sep_style = Style::default().fg(section_bg).bg(next_bg);
-            let cell = &mut buf[(cursor_x, area.y)];
-            cell.set_char(powerline.chars().next().unwrap_or('▸'));
-            cell.set_style(sep_style);
+            set_cell(
+                buf,
+                &bounds,
+                cursor_x,
+                area.y,
+                powerline.chars().next().unwrap_or('▸'),
+                sep_style,
+            );
             cursor_x += 1;
         }
     }

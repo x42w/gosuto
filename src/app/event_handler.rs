@@ -233,20 +233,17 @@ impl App {
             AppEvent::MembersLoaded { room_id, members } => {
                 if self.messages.current_room_id.as_deref() == Some(&room_id) {
                     self.members_list.set_members(&room_id, members);
-                    self.members_title_reveal.trigger();
                 }
             }
             AppEvent::DmRoomReady { room_id } => {
                 self.messages.set_room(Some(room_id));
                 self.vim.focus = FocusPanel::Messages;
-                self.chat_title_reveal.trigger();
             }
             AppEvent::RoomCreated { room_id } => {
                 self.create_room.open = false;
                 self.create_room.creating = false;
                 self.messages.set_room(Some(room_id));
                 self.vim.focus = FocusPanel::Messages;
-                self.chat_title_reveal.trigger();
             }
             AppEvent::SyncError(err) => {
                 if self.create_room.creating {
@@ -553,7 +550,6 @@ impl App {
             AppEvent::InviteAccepted { room_id } => {
                 self.messages.set_room(Some(room_id));
                 self.vim.focus = FocusPanel::Messages;
-                self.chat_title_reveal.trigger();
                 self.pending_refetch = true;
             }
             AppEvent::InviteDeclined => {

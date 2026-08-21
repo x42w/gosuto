@@ -48,12 +48,15 @@ pub struct EditContext {
     pub original_body: String,
 }
 
-pub(crate) fn truncate_preview(text: &str, max_len: usize) -> String {
+pub(crate) fn truncate_preview(text: &str, max_bytes: usize) -> String {
     let first_line = text.lines().next().unwrap_or("");
-    if first_line.len() <= max_len {
+    if first_line.len() <= max_bytes {
         first_line.to_string()
     } else {
-        format!("{}...", &first_line[..max_len])
+        // Slice at a char boundary: max_bytes may fall inside a multi-byte
+        // UTF-8 sequence (e.g. CJK, emoji), which would panic.
+        let cut = first_line.floor_char_boundary(max_bytes);
+        format!("{}...", &first_line[..cut])
     }
 }
 

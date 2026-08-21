@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::Style;
 
 use crate::app::App;
+use crate::ui::cells::{display_width, write_str};
 use crate::ui::popup;
 use crate::ui::theme;
 
@@ -38,8 +39,8 @@ pub fn render(app: &App, frame: &mut Frame) {
 
     let display_text = popup::truncate_str(&confirm.body_preview, inner_w);
     let y = popup_area.y + 3;
-    let x = left + (inner_w.saturating_sub(display_text.chars().count())) as u16 / 2;
-    popup::write_str(buf, &bounds, x, y, &display_text, text_style);
+    let x = left + (inner_w.saturating_sub(display_width(&display_text) as usize)) as u16 / 2;
+    write_str(buf, &bounds, x, y, &display_text, text_style);
 
     popup::render_hint(buf, &bounds, popup_area, "y confirm \u{00b7} n cancel");
 }

@@ -384,3 +384,46 @@ fn healing_from_resetting_stage() {
         RecoveryStage::Healing(HealingStep::Backup)
     );
 }
+
+#[test]
+fn truncate_preview_short_multibyte_unchanged() {
+    // `---炸` is the reported repro: short body must pass through untouched.
+    assert_eq!(truncate_preview("---炸", 50), "---炸");
+}
+
+#[test]
+fn truncate_preview_safe_with_multibyte_chars() {
+    // 5 x "你好，世界！" = 90 bytes; the 50-byte cut lands mid-char.
+    // Byte 48 is a char boundary (16 chars), so expect 48 bytes + "...".
+    let text = "你好，世界！".repeat(5);
+    let preview = truncate_preview(&text, 50);
+    assert!(preview.ends_with("..."));
+    assert_eq!(preview, "你好，世界！你好，世界！你好，世...");
+    // Result must never contain a partial UTF-8 sequence.
+    assert!(std::str::from_utf8(preview.as_bytes()).is_ok());
+}
+
+#[test]
+fn truncate_preview_safe_with_emoji() {
+    // 20 emoji = 80 bytes; the 50-byte cut lands mid-codepoint.
+    let text = "😀".repeat(20);
+    let preview = truncate_preview(&text, 50);
+    assert!(preview.ends_with("..."));
+    assert_eq!(preview, format!("{}...", "😀".repeat(12)));
+    assert!(std::str::from_utf8(preview.as_bytes()).is_ok());
+}
+
+#[test]
+fn truncate_preview_truncates_ascii() {
+    assert_eq!(
+        truncate_preview(&"a".repeat(60), 50),
+        format!("{}...", "a".repeat(50))
+    );
+    assert_eq!(truncate_preview(&"a".repeat(50), 50), "a".repeat(50));
+}
+
+#[test]
+fn truncate_preview_empty_or_zero_max() {
+    assert_eq!(truncate_preview("", 50), "");
+    assert_eq!(truncate_preview("hello", 0), "...");
+}

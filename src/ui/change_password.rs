@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::{Modifier, Style};
 
 use crate::state::ChangePasswordState;
+use crate::ui::cells::{set_cell, write_str};
 use crate::ui::icons::Icons;
 use crate::ui::popup;
 use crate::ui::theme;
@@ -66,8 +67,8 @@ pub fn render(
                 Modifier::empty()
             });
 
-        popup::write_str(buf, &bounds, left, row, marker, marker_s);
-        popup::set_cell(
+        write_str(buf, &bounds, left, row, marker, marker_s);
+        set_cell(
             buf,
             &bounds,
             left + 1,
@@ -75,13 +76,13 @@ pub fn render(
             ' ',
             Style::default().bg(theme::BG),
         );
-        popup::write_str(buf, &bounds, label_x, row, field_name, label_s);
+        write_str(buf, &bounds, label_x, row, field_name, label_s);
 
         // Masked value
         let buf_len = buffers[i].len();
         let masked: String = "\u{2022}".repeat(buf_len.min(max_val_w.saturating_sub(1)));
         let val_color = if selected { theme::GREEN } else { theme::DIM };
-        popup::write_str(
+        write_str(
             buf,
             &bounds,
             value_x,
@@ -93,7 +94,7 @@ pub fn render(
         // Blinking cursor on selected field
         if selected && cursor_visible {
             let cursor_x = value_x + masked.chars().count() as u16;
-            popup::set_cell(buf, &bounds, cursor_x, row, '_', theme::edit_cursor_style());
+            set_cell(buf, &bounds, cursor_x, row, '_', theme::edit_cursor_style());
         }
 
         row += 1;
@@ -104,7 +105,7 @@ pub fn render(
         row += 1;
         let msg = "saving...";
         let sx = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
-        popup::write_str(
+        write_str(
             buf,
             &bounds,
             sx,

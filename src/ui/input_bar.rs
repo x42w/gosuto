@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::app::App;
 use crate::input::{FocusPanel, VimMode};
+use crate::ui::cells::display_width;
 use crate::ui::{panel, theme};
 
 pub fn render(app: &App, frame: &mut Frame, area: Rect) {
@@ -161,12 +162,12 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                 (x, y)
             }
             VimMode::Command => {
-                let x = area.x + 1 + prefix.len() as u16 + app.vim.command_buffer.len() as u16 + 1;
+                let x = area.x + 1 + display_width(&app.vim.command_buffer) + 1;
                 let y = area.y + 1;
                 (x, y)
             }
             VimMode::Normal => {
-                let x = area.x + 1 + prefix.len() as u16 + app.vim.search_query.len() as u16 + 1;
+                let x = area.x + 1 + display_width(&app.vim.search_query) + 1;
                 let y = area.y + 1;
                 (x, y)
             }

@@ -2,6 +2,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
+use crate::ui::cells::{display_width, in_bounds, set_cell, write_chars_until, write_str};
 use crate::ui::{gradient, theme};
 
 pub fn centered_rect(w: u16, h: u16, area: Rect) -> Rect {
@@ -11,27 +12,6 @@ pub fn centered_rect(w: u16, h: u16, area: Rect) -> Rect {
         w.min(area.width),
         h.min(area.height),
     )
-}
-
-#[inline]
-pub fn in_bounds(x: u16, y: u16, r: &Rect) -> bool {
-    x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height
-}
-
-#[inline]
-pub fn set_cell(buf: &mut Buffer, bounds: &Rect, x: u16, y: u16, ch: char, style: Style) {
-    if in_bounds(x, y, bounds) {
-        let cell = &mut buf[(x, y)];
-        cell.set_char(ch);
-        cell.set_style(style);
-        cell.skip = false;
-    }
-}
-
-pub fn write_str(buf: &mut Buffer, bounds: &Rect, x: u16, y: u16, text: &str, style: Style) {
-    for (i, ch) in text.chars().enumerate() {
-        set_cell(buf, bounds, x + i as u16, y, ch, style);
-    }
 }
 
 pub fn fill_bg(buf: &mut Buffer, bounds: &Rect, popup: Rect) {
@@ -47,9 +27,12 @@ pub fn fill_bg(buf: &mut Buffer, bounds: &Rect, popup: Rect) {
     }
 }
 
-pub fn truncate_str(s: &str, max: usize) -> String {
-    if s.len() > max {
-        format!("{}…", &s[..max.saturating_sub(1)])
+pub fn truncate_str(s: &str, max_bytes: usize) -> String {
+    if s.len() > max_bytes {
+        // Slice at a char boundary: max_bytes may fall inside a multi-byte
+        // UTF-8 sequence (e.g. CJK, emoji), which would panic.
+        let cut = s.floor_char_boundary(max_bytes.saturating_sub(1));
+        format!("{}…", &s[..cut])
     } else {
         s.to_string()
     }
@@ -100,15 +83,17 @@ pub fn render_title(buf: &mut Buffer, bounds: &Rect, area: Rect, color: Color, t
     set_cell(buf, bounds, bracket_l, area.y, '╡', border_s);
     set_cell(buf, bounds, bracket_l + 1, area.y, ' ', border_s);
 
-    for (i, ch) in title.chars().enumerate() {
-        let x = title_start + i as u16;
-        if x >= area.x + area.width - 1 {
-            break;
-        }
-        set_cell(buf, bounds, x, area.y, ch, title_s);
-    }
+    write_chars_until(
+        buf,
+        bounds,
+        title_start,
+        area.y,
+        title.chars(),
+        title_s,
+        area.x + area.width - 1,
+    );
 
-    let bracket_r_space = title_start + title.len() as u16;
+    let bracket_r_space = title_start + display_width(title);
     let bracket_r = bracket_r_space + 1;
     set_cell(buf, bounds, bracket_r_space, area.y, ' ', border_s);
     if bracket_r < area.x + area.width - 1 {
@@ -119,8 +104,9 @@ pub fn render_title(buf: &mut Buffer, bounds: &Rect, area: Rect, color: Color, t
 pub fn render_hint(buf: &mut Buffer, bounds: &Rect, popup: Rect, hint: &str) {
     let hint_row = popup.y + popup.height.saturating_sub(2);
     let inner_w = popup.width.saturating_sub(6) as usize;
+    let hint_width = display_width(hint) as usize;
     let left = popup.x + 3;
-    let hx = left + (inner_w.saturating_sub(hint.chars().count())) as u16 / 2;
+    let hx = left + (inner_w.saturating_sub(hint_width)) as u16 / 2;
     write_str(
         buf,
         bounds,
@@ -144,5 +130,37 @@ pub fn history_visibility_description(value: &str) -> &'static str {
         "joined" => "See history from when joined",
         "world_readable" => "Anyone can read full history",
         _ => "",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn truncate_str_short_unchanged() {
+        assert_eq!(truncate_str("---炸", 50), "---炸");
+    }
+
+    #[test]
+    fn truncate_str_safe_with_multibyte() {
+        // 30 x "炸" = 90 bytes; cut lands mid-char, must not panic.
+        let s = "炸".repeat(30);
+        let t = truncate_str(&s, 50);
+        assert!(t.ends_with('…'));
+        // floor(49) = 48 bytes = 16 chars, then the ellipsis.
+        assert_eq!(t, format!("{}…", "炸".repeat(16)));
+        assert!(std::str::from_utf8(t.as_bytes()).is_ok());
+    }
+
+    #[test]
+    fn truncate_str_truncates_ascii() {
+        assert_eq!(truncate_str("hello world", 5), "hell…");
+        assert_eq!(truncate_str("hello", 5), "hello");
+    }
+
+    #[test]
+    fn truncate_str_zero_max() {
+        assert_eq!(truncate_str("hello", 0), "…");
     }
 }

@@ -580,7 +580,6 @@ pub fn render_ringing(
         room_id: room_id.to_string(),
         room_name: room_name.map(|s| s.to_string()),
         state: CallState::Connecting(ConnectingPhase::DiscoveringService), // doesn't matter, display_state overrides
-        is_incoming: true,
         participants: vec![caller.to_string()],
         started_at: None,
     };

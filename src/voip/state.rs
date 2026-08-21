@@ -32,7 +32,6 @@ pub struct CallInfo {
     pub room_id: String,
     pub room_name: Option<String>,
     pub state: CallState,
-    pub is_incoming: bool,
     pub participants: Vec<String>,
     pub started_at: Option<Instant>,
 }
@@ -43,7 +42,6 @@ impl CallInfo {
             room_id,
             room_name,
             state: CallState::Connecting(ConnectingPhase::DiscoveringService),
-            is_incoming: false,
             participants: Vec::new(),
             started_at: None,
         }
@@ -54,7 +52,6 @@ impl CallInfo {
             room_id,
             room_name,
             state: CallState::Connecting(ConnectingPhase::DiscoveringService),
-            is_incoming: true,
             participants: vec![caller],
             started_at: None,
         }
@@ -87,7 +84,6 @@ mod tests {
             call.state,
             CallState::Connecting(ConnectingPhase::DiscoveringService)
         );
-        assert!(!call.is_incoming);
         assert!(call.participants.is_empty());
         assert!(call.started_at.is_none());
     }
@@ -106,7 +102,6 @@ mod tests {
             Some("Room".to_string()),
         );
         assert_eq!(call.room_id, "!room:x");
-        assert!(call.is_incoming);
         assert_eq!(
             call.state,
             CallState::Connecting(ConnectingPhase::DiscoveringService)

@@ -127,7 +127,10 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
         };
         let text = format!("Loading rooms{dots}");
         let style = theme::dim_style();
-        let text_width = text.chars().count() as u16;
+        let text_width: u16 = text
+            .chars()
+            .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+            .sum::<usize>() as u16;
         let x = inner.x + inner.width.saturating_sub(text_width) / 2;
         let y = inner.y + inner.height / 2;
         let buf = frame.buffer_mut();

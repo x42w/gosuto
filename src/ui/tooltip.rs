@@ -1,4 +1,5 @@
 use ratatui::{buffer::Buffer, layout::Rect, style::Style};
+use unicode_width::UnicodeWidthChar;
 
 use super::theme;
 
@@ -20,6 +21,43 @@ pub fn set_cell_if(buf: &mut Buffer, bounds: &Rect, x: u16, y: u16, ch: char, st
     }
 }
 
+/// Write one character at `x` (a *cell* column, not a char index), advancing
+/// `x` by the character's display width. Wide characters (e.g. emoji) occupy
+/// two cells; the second cell is marked `skip` so ratatui's buffer diffing
+/// doesn't overwrite it each frame and cause flicker artifacts.
+fn write_char_advance(
+    buf: &mut Buffer,
+    bounds: &Rect,
+    x: &mut u16,
+    y: u16,
+    ch: char,
+    style: Style,
+) {
+    let width = UnicodeWidthChar::width(ch).unwrap_or(0);
+    if width == 0 {
+        // Zero-width (combining) char: attach to the previous cell.
+        if *x > bounds.x {
+            buf[(*x - 1, y)].set_char(ch);
+        }
+        return;
+    }
+    let cx = *x;
+    if cx < bounds.x + bounds.width && y >= bounds.y && y < bounds.y + bounds.height {
+        let cell = &mut buf[(cx, y)];
+        cell.set_char(ch);
+        cell.set_style(style);
+        cell.skip = false;
+    }
+    *x += 1;
+    if width > 1 && cx + 1 < bounds.x + bounds.width {
+        let cont = &mut buf[(cx + 1, y)];
+        cont.set_char(' ');
+        cont.set_style(style);
+        cont.skip = true;
+    }
+    *x += 1;
+}
+
 /// Write a string clipped to the given rectangle. Returns `true` if the text was truncated.
 pub fn write_str_clipped(
     buf: &mut Buffer,
@@ -32,12 +70,21 @@ pub fn write_str_clipped(
 ) -> bool {
     let bounds = *buf.area();
     let clip_end = clip.x + clip.width;
-    let char_count = text.chars().count() as u16;
-    let truncated = x + char_count > clip_end;
+    // Total display width, not char count (wide chars occupy 2 cells).
+    let text_width: u16 = text
+        .chars()
+        .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
+        .sum::<usize>() as u16;
+    let truncated = x + text_width > clip_end;
 
-    for (i, ch) in text.chars().enumerate() {
-        let cx = x + i as u16;
+    let mut cx = x;
+    for ch in text.chars() {
         if cx >= clip_end {
+            break;
+        }
+        let w = UnicodeWidthChar::width(ch).unwrap_or(0);
+        // Don't start a wide char at the clip edge — skip it entirely.
+        if w > 1 && cx + 1 > clip_end {
             break;
         }
         if cx >= bounds.x
@@ -45,8 +92,10 @@ pub fn write_str_clipped(
             && y >= bounds.y
             && y < bounds.y + bounds.height
         {
-            buf[(cx, y)].set_char(ch);
-            buf[(cx, y)].set_style(style);
+            write_char_advance(buf, &bounds, &mut cx, y, ch, style);
+        } else {
+            // Out of bounds: still advance by display width to keep alignment.
+            cx = cx.saturating_add(w.max(1) as u16);
         }
     }
 
@@ -79,7 +128,11 @@ pub fn render_tooltip_box(
     direction: Direction,
 ) {
     let bounds = *buf.area();
-    let content_width = label.chars().count() as u16 + 2; // 1-char padding each side
+    let label_width: u16 = label
+        .chars()
+        .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
+        .sum::<usize>() as u16;
+    let content_width = label_width + 2; // 1-char padding each side
     let box_height: u16 = 3; // top border + content + bottom border
 
     let (tooltip_x, box_width) = match direction {

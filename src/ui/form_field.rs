@@ -1,5 +1,6 @@
 use ratatui::buffer::Buffer;
 use ratatui::style::Style;
+use unicode_width::UnicodeWidthChar;
 
 use crate::ui::icons::Icons;
 use crate::ui::popup;
@@ -91,7 +92,11 @@ pub fn render_editing(
         theme::edit_text_style(),
     );
     if cursor_visible {
-        let cursor_x = value_x + display.chars().count() as u16;
+        let cursor_x = value_x
+            + display
+                .chars()
+                .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
+                .sum::<usize>() as u16;
         popup::set_cell(buf, &bounds, cursor_x, row, '_', theme::edit_cursor_style());
     }
 }
@@ -121,7 +126,12 @@ pub fn render_cycle_selector(
 
     popup::write_str(buf, &bounds, value_x + 2, row, value, val_s);
 
-    let end_x = value_x + 2 + value.chars().count() as u16;
+    let end_x = value_x
+        + 2
+        + value
+            .chars()
+            .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
+            .sum::<usize>() as u16;
     popup::set_cell(
         buf,
         &bounds,

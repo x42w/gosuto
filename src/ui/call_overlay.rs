@@ -372,7 +372,11 @@ impl TransmissionPopup {
         // VOICE right-aligned
         let voice = format!("{} VOICE", icons.voice);
         let voice = voice.as_str();
-        let vx = right.saturating_sub(voice.chars().count() as u16);
+        let voice_width: usize = voice
+            .chars()
+            .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+            .sum();
+        let vx = right.saturating_sub(voice_width as u16);
         popup::write_str(
             buf,
             bounds,
@@ -532,7 +536,14 @@ impl TransmissionPopup {
             ],
         };
 
-        let total: usize = segments.iter().map(|(t, _, _)| t.chars().count()).sum();
+        let total: usize = segments
+            .iter()
+            .map(|(t, _, _)| {
+                t.chars()
+                    .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+                    .sum::<usize>()
+            })
+            .sum();
         let inner = area.width.saturating_sub(2) as usize;
         let offset = inner.saturating_sub(total) / 2;
         let mut x = area.x + 1 + offset as u16;
@@ -543,7 +554,10 @@ impl TransmissionPopup {
                 s = s.add_modifier(Modifier::BOLD);
             }
             popup::write_str(buf, bounds, x, row, text, s);
-            x += text.chars().count() as u16;
+            x += text
+                .chars()
+                .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
+                .sum::<usize>() as u16;
         }
     }
 }

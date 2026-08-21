@@ -108,16 +108,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     // Render call overlay on top for any active call state or incoming ringing
     if let Some(ref info) = app.call_info {
-        let ds = if info.is_incoming
-            && matches!(info.state, crate::voip::CallState::Connecting(_))
-            && info.started_at.is_none()
-        {
-            call_overlay::CallDisplayState::Connecting
-        } else {
-            match info.state {
-                crate::voip::CallState::Connecting(_) => call_overlay::CallDisplayState::Connecting,
-                crate::voip::CallState::Active => call_overlay::CallDisplayState::Active,
-            }
+        let ds = match info.state {
+            crate::voip::CallState::Connecting(_) => call_overlay::CallDisplayState::Connecting,
+            crate::voip::CallState::Active => call_overlay::CallDisplayState::Active,
         };
         call_overlay::render(&app.call_popup, info, &ds, icons, frame);
     } else if let Some(ref room_id) = app.incoming_call_room {

@@ -27,11 +27,11 @@ pub fn fill_bg(buf: &mut Buffer, bounds: &Rect, popup: Rect) {
     }
 }
 
-pub fn truncate_str(s: &str, max: usize) -> String {
-    if s.len() > max {
-        // Slice at a char boundary: max may fall inside a multi-byte
+pub fn truncate_str(s: &str, max_bytes: usize) -> String {
+    if s.len() > max_bytes {
+        // Slice at a char boundary: max_bytes may fall inside a multi-byte
         // UTF-8 sequence (e.g. CJK, emoji), which would panic.
-        let cut = s.floor_char_boundary(max.saturating_sub(1));
+        let cut = s.floor_char_boundary(max_bytes.saturating_sub(1));
         format!("{}…", &s[..cut])
     } else {
         s.to_string()

@@ -291,7 +291,7 @@ impl TransmissionPopup {
             let room_s = Style::default().fg(theme::CYAN).bg(theme::BG);
             let label = format!("{} {}", icons.home, name);
             let max_w = (right - left) as usize;
-            let truncated: String = label.chars().take(max_w).collect();
+            let truncated = popup::truncate_str(&label, max_w);
             write_str(buf, bounds, left, row, &truncated, room_s);
         }
 

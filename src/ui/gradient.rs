@@ -3,6 +3,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 
+use crate::ui::cells::{in_bounds, set_cell};
 use crate::ui::theme;
 
 /// Linearly interpolate between two RGB colors. Clamps `t` to [0.0, 1.0].
@@ -109,23 +110,22 @@ pub fn fill_row_highlight(
     width: u16,
     clear: bool,
 ) {
-    let w = width as f32;
+    let w = width.max(1) as f32;
     for x in x_start..x_start + width {
-        if x >= bounds.x + bounds.width || row_y < bounds.y || row_y >= bounds.y + bounds.height {
-            continue;
-        }
-        let t = (x - x_start) as f32 / w.max(1.0);
+        let t = (x - x_start) as f32 / w;
         let bg = lerp_color(
             theme::GRADIENT_HIGHLIGHT_START,
             theme::GRADIENT_HIGHLIGHT_END,
             t,
         );
         let fg = lerp_color(theme::BLACK, theme::CYAN, t);
-        let cell = &mut buf[(x, row_y)];
+        let style = Style::default().fg(fg).bg(bg).add_modifier(Modifier::BOLD);
         if clear {
-            cell.set_char(' ');
+            set_cell(buf, &bounds, x, row_y, ' ', style);
+        } else if in_bounds(x, row_y, &bounds) {
+            // Keep the existing glyph, restyle only.
+            buf[(x, row_y)].set_style(style);
         }
-        cell.set_style(Style::default().fg(fg).bg(bg).add_modifier(Modifier::BOLD));
     }
 }
 

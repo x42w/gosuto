@@ -305,7 +305,9 @@ mod tests {
     fn write_str_clipped_cjk_truncation_detection() {
         let (mut buf, _) = buffer();
         let clip = Rect::new(0, 0, 5, 1);
-        // 3 hanzi = 6 cells > 5 → truncated, third one not started.
+        // 3 hanzi = 6 cells > 5 → truncated. The third hanzi still starts
+        // on the last clip column (its continuation cell is the first one
+        // past the clip); with ellipsis it is replaced by "…".
         assert!(write_str_clipped(
             &mut buf,
             0,
@@ -317,6 +319,18 @@ mod tests {
         ));
         assert_eq!(buf[(0, 0)].symbol(), "日");
         assert_eq!(buf[(2, 0)].symbol(), "本");
+        assert_eq!(buf[(4, 0)].symbol(), "語");
+
+        let (mut buf, _) = buffer();
+        assert!(write_str_clipped(
+            &mut buf,
+            0,
+            0,
+            "日本語",
+            Style::default(),
+            &clip,
+            true
+        ));
         assert_eq!(buf[(4, 0)].symbol(), "…");
     }
 }

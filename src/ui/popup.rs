@@ -127,9 +127,7 @@ pub fn render_title(buf: &mut Buffer, bounds: &Rect, area: Rect, color: Color, t
         if w > 1 {
             set_cell(buf, bounds, cx + 1, area.y, ' ', title_s);
             cx += 2;
-        } else if w == 0 {
-            cx = cx; // zero-width: keep position
-        } else {
+        } else if w != 0 {
             cx += 1;
         }
     }

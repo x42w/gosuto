@@ -4,7 +4,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 
 use crate::state::AudioSettingsState;
-use crate::ui::cells::display_width;
+use crate::ui::cells::{display_width, set_cell, write_str};
 use crate::ui::icons::Icons;
 use crate::ui::{form_field, gradient, popup, theme};
 
@@ -77,7 +77,7 @@ fn render_field(
 
     match field_id {
         0 => {
-            popup::write_str(buf, &bounds, label_x, row, "INPUT DEVICE", label_s);
+            write_str(buf, &bounds, label_x, row, "INPUT DEVICE", label_s);
             let name = state
                 .input_devices
                 .get(state.input_device_idx)
@@ -86,7 +86,7 @@ fn render_field(
             render_device_selector(buf, value_x, right, row, name, selected, icons);
         }
         1 => {
-            popup::write_str(buf, &bounds, label_x, row, "OUTPUT DEVICE", label_s);
+            write_str(buf, &bounds, label_x, row, "OUTPUT DEVICE", label_s);
             let name = state
                 .output_devices
                 .get(state.output_device_idx)
@@ -95,38 +95,38 @@ fn render_field(
             render_device_selector(buf, value_x, right, row, name, selected, icons);
         }
         2 => {
-            popup::write_str(buf, &bounds, label_x, row, "INPUT VOLUME", label_s);
+            write_str(buf, &bounds, label_x, row, "INPUT VOLUME", label_s);
             render_volume_bar(buf, &bounds, value_x, row, state.input_volume, selected);
         }
         3 => {
-            popup::write_str(buf, &bounds, label_x, row, "OUTPUT VOLUME", label_s);
+            write_str(buf, &bounds, label_x, row, "OUTPUT VOLUME", label_s);
             render_volume_bar(buf, &bounds, value_x, row, state.output_volume, selected);
         }
         4 => {
-            popup::write_str(buf, &bounds, label_x, row, "VOICE ACTIVITY", label_s);
+            write_str(buf, &bounds, label_x, row, "VOICE ACTIVITY", label_s);
             render_toggle(buf, &bounds, value_x, row, state.voice_activity, selected);
         }
         5 => {
-            popup::write_str(buf, &bounds, label_x, row, "SENSITIVITY", label_s);
+            write_str(buf, &bounds, label_x, row, "SENSITIVITY", label_s);
             render_volume_bar(buf, &bounds, value_x, row, state.sensitivity, selected);
         }
         6 => {
-            popup::write_str(buf, &bounds, label_x, row, "PUSH TO TALK", label_s);
+            write_str(buf, &bounds, label_x, row, "PUSH TO TALK", label_s);
             render_toggle(buf, &bounds, value_x, row, state.push_to_talk, selected);
         }
         8 => {
-            popup::write_str(buf, &bounds, label_x, row, "VAD HOLD", label_s);
+            write_str(buf, &bounds, label_x, row, "VAD HOLD", label_s);
             let value = state.vad_hold_ms as f32 / 1000.0;
             render_volume_bar(buf, &bounds, value_x, row, value, selected);
         }
         7 => {
-            popup::write_str(buf, &bounds, label_x, row, "PTT KEY", label_s);
+            write_str(buf, &bounds, label_x, row, "PTT KEY", label_s);
             if state.capturing_ptt_key {
                 let s = Style::default()
                     .fg(theme::GREEN)
                     .bg(theme::BG)
                     .add_modifier(Modifier::BOLD);
-                popup::write_str(buf, &bounds, value_x, row, "press key...", s);
+                write_str(buf, &bounds, value_x, row, "press key...", s);
             } else if let Some(ref err) = state.ptt_error {
                 let s = Style::default()
                     .fg(theme::RED)
@@ -134,7 +134,7 @@ fn render_field(
                     .add_modifier(Modifier::BOLD);
                 let max_w = (right.saturating_sub(value_x)) as usize;
                 let display = popup::truncate_str(err, max_w);
-                popup::write_str(buf, &bounds, value_x, row, &display, s);
+                write_str(buf, &bounds, value_x, row, &display, s);
             } else {
                 let key_name = state.push_to_talk_key.as_deref().unwrap_or("not set");
                 let s = if selected {
@@ -143,7 +143,7 @@ fn render_field(
                     Style::default().fg(theme::DIM).bg(theme::BG)
                 };
                 let display = format!("[{}]", key_name);
-                popup::write_str(buf, &bounds, value_x, row, &display, s);
+                write_str(buf, &bounds, value_x, row, &display, s);
             }
         }
         _ => {}
@@ -163,8 +163,8 @@ fn render_device_selector(
     let arrow_s = theme::field_arrow_style(selected);
     let name_s = theme::field_value_style(selected);
 
-    popup::write_str(buf, &bounds, x, row, icons.arrow_left, arrow_s);
-    popup::set_cell(
+    write_str(buf, &bounds, x, row, icons.arrow_left, arrow_s);
+    set_cell(
         buf,
         &bounds,
         x + 1,
@@ -175,10 +175,10 @@ fn render_device_selector(
 
     let max_name_w = (right.saturating_sub(x + 4)) as usize;
     let display = popup::truncate_str(name, max_name_w);
-    popup::write_str(buf, &bounds, x + 2, row, &display, name_s);
+    write_str(buf, &bounds, x + 2, row, &display, name_s);
 
     let end_x = x + 2 + display_width(&display);
-    popup::set_cell(
+    set_cell(
         buf,
         &bounds,
         end_x,
@@ -186,7 +186,7 @@ fn render_device_selector(
         ' ',
         Style::default().bg(theme::BG),
     );
-    popup::write_str(buf, &bounds, end_x + 1, row, icons.arrow_right, arrow_s);
+    write_str(buf, &bounds, end_x + 1, row, icons.arrow_right, arrow_s);
 }
 
 fn render_volume_bar(
@@ -200,7 +200,7 @@ fn render_volume_bar(
     let filled = (value * BAR_WIDTH as f32).round() as usize;
     let pct = format!("{:>3}%", (value * 100.0).round() as u32);
 
-    popup::set_cell(
+    set_cell(
         buf,
         bounds,
         x,
@@ -220,7 +220,7 @@ fn render_volume_bar(
         } else {
             theme::BAR_EMPTY
         };
-        popup::set_cell(
+        set_cell(
             buf,
             bounds,
             x + 1 + i as u16,
@@ -230,7 +230,7 @@ fn render_volume_bar(
         );
     }
 
-    popup::set_cell(
+    set_cell(
         buf,
         bounds,
         x + 1 + BAR_WIDTH as u16,
@@ -240,7 +240,7 @@ fn render_volume_bar(
     );
 
     let pct_color = if selected { theme::CYAN } else { theme::DIM };
-    popup::write_str(
+    write_str(
         buf,
         bounds,
         x + 2 + BAR_WIDTH as u16,
@@ -260,13 +260,13 @@ fn render_toggle(buf: &mut Buffer, bounds: &Rect, x: u16, row: u16, on: bool, se
         .fg(if selected { color } else { theme::DIM })
         .bg(theme::BG)
         .add_modifier(Modifier::BOLD);
-    popup::write_str(buf, bounds, x, row, text, s);
+    write_str(buf, bounds, x, row, text, s);
 }
 
 fn render_mic_meter(buf: &mut Buffer, bounds: &Rect, left: u16, right: u16, row: u16, level: f32) {
     let label = "MIC ";
     let label_s = Style::default().fg(theme::DIM).bg(theme::BG);
-    popup::write_str(buf, bounds, left, row, label, label_s);
+    write_str(buf, bounds, left, row, label, label_s);
 
     let bar_start = left + label.len() as u16;
     let bar_width = (right.saturating_sub(bar_start)) as usize;
@@ -284,7 +284,7 @@ fn render_mic_meter(buf: &mut Buffer, bounds: &Rect, left: u16, right: u16, row:
         } else {
             theme::METER_EMPTY
         };
-        popup::set_cell(
+        set_cell(
             buf,
             bounds,
             bar_start + i as u16,

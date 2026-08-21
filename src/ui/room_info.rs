@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::Style;
 
 use crate::state::{HISTORY_VISIBILITY_OPTIONS, RoomInfoState};
+use crate::ui::cells::write_str;
 use crate::ui::icons::Icons;
 use crate::ui::{form_field, popup, theme};
 
@@ -36,7 +37,7 @@ pub fn render(
         let msg = "Loading...";
         let mx = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
         let my = popup_area.y + popup_area.height / 2;
-        popup::write_str(buf, &bounds, mx, my, msg, theme::loading_style());
+        write_str(buf, &bounds, mx, my, msg, theme::loading_style());
         return;
     }
 
@@ -48,9 +49,9 @@ pub fn render(
     let mut row = popup_area.y + 2;
 
     // Room ID (read-only)
-    popup::write_str(buf, &bounds, label_x, row, "ROOM ID", label_s);
+    write_str(buf, &bounds, label_x, row, "ROOM ID", label_s);
     let id_display = popup::truncate_str(&state.room_id, (right - value_x) as usize);
-    popup::write_str(buf, &bounds, value_x, row, &id_display, value_s);
+    write_str(buf, &bounds, value_x, row, &id_display, value_s);
     row += 1;
 
     row += 1;
@@ -102,13 +103,13 @@ pub fn render(
     // History visibility description
     let desc = popup::history_visibility_description(&state.history_visibility);
     let desc_s = Style::default().fg(theme::DIM).bg(theme::BG);
-    popup::write_str(buf, &bounds, value_x, row, desc, desc_s);
+    write_str(buf, &bounds, value_x, row, desc, desc_s);
     row += 1;
 
     // ── Field 3: ENCRYPTED (editable when unencrypted, read-only when encrypted) ──
     if state.encrypted {
-        popup::write_str(buf, &bounds, label_x, row, "ENCRYPTED", label_s);
-        popup::write_str(
+        write_str(buf, &bounds, label_x, row, "ENCRYPTED", label_s);
+        write_str(
             buf,
             &bounds,
             value_x,
@@ -134,7 +135,7 @@ pub fn render(
         row += 2;
         let msg = "saving...";
         let sx = left + (inner_w.saturating_sub(msg.len())) as u16 / 2;
-        popup::write_str(buf, &bounds, sx, row, msg, theme::saving_style());
+        write_str(buf, &bounds, sx, row, msg, theme::saving_style());
     }
 
     // Show valid options hint
@@ -145,7 +146,7 @@ pub fn render(
         HISTORY_VISIBILITY_OPTIONS.join(" | ")
     };
     let opts_x = left + (inner_w.saturating_sub(opts.len())) as u16 / 2;
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         opts_x,

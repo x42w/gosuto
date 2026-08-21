@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::Rect, style::Style};
-use unicode_width::UnicodeWidthChar;
 
+use super::cells::{display_width, set_cell, write_str_clipped};
 use super::theme;
 
 /// Direction the tooltip box opens relative to its anchor.
@@ -9,113 +9,6 @@ pub enum Direction {
     Right,
     /// Tooltip opens to the left of the anchor (for members pane).
     Left,
-}
-
-/// Write a single cell if within buffer bounds.
-#[inline]
-pub fn set_cell_if(buf: &mut Buffer, bounds: &Rect, x: u16, y: u16, ch: char, style: Style) {
-    if x >= bounds.x && x < bounds.x + bounds.width && y >= bounds.y && y < bounds.y + bounds.height
-    {
-        buf[(x, y)].set_char(ch);
-        buf[(x, y)].set_style(style);
-    }
-}
-
-/// Write one character at `x` (a *cell* column, not a char index), advancing
-/// `x` by the character's display width. Wide characters (e.g. emoji) occupy
-/// two cells; the second cell is marked `skip` so ratatui's buffer diffing
-/// doesn't overwrite it each frame and cause flicker artifacts.
-fn write_char_advance(
-    buf: &mut Buffer,
-    bounds: &Rect,
-    x: &mut u16,
-    y: u16,
-    ch: char,
-    style: Style,
-) {
-    let width = UnicodeWidthChar::width(ch).unwrap_or(0);
-    if width == 0 {
-        // Zero-width (combining) char: attach to the previous cell.
-        if *x > bounds.x {
-            buf[(*x - 1, y)].set_char(ch);
-        }
-        return;
-    }
-    let cx = *x;
-    if cx < bounds.x + bounds.width && y >= bounds.y && y < bounds.y + bounds.height {
-        let cell = &mut buf[(cx, y)];
-        cell.set_char(ch);
-        cell.set_style(style);
-        cell.skip = false;
-    }
-    if width > 1 {
-        if cx + 1 < bounds.x + bounds.width {
-            let cont = &mut buf[(cx + 1, y)];
-            cont.set_char(' ');
-            cont.set_style(style);
-            cont.skip = true;
-        }
-        *x += 2;
-    } else {
-        *x += 1;
-    }
-}
-
-/// Write a string clipped to the given rectangle. Returns `true` if the text was truncated.
-pub fn write_str_clipped(
-    buf: &mut Buffer,
-    x: u16,
-    y: u16,
-    text: &str,
-    style: Style,
-    clip: &Rect,
-    ellipsis: bool,
-) -> bool {
-    let bounds = *buf.area();
-    let clip_end = clip.x + clip.width;
-    // Total display width, not char count (wide chars occupy 2 cells).
-    let text_width: u16 = text
-        .chars()
-        .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
-        .sum::<usize>() as u16;
-    let truncated = x + text_width > clip_end;
-
-    let mut cx = x;
-    for ch in text.chars() {
-        if cx >= clip_end {
-            break;
-        }
-        let w = UnicodeWidthChar::width(ch).unwrap_or(0);
-        // Don't start a wide char at the clip edge — skip it entirely.
-        if w > 1 && cx + 1 > clip_end {
-            break;
-        }
-        if cx >= bounds.x
-            && cx < bounds.x + bounds.width
-            && y >= bounds.y
-            && y < bounds.y + bounds.height
-        {
-            write_char_advance(buf, &bounds, &mut cx, y, ch, style);
-        } else {
-            // Out of bounds: still advance by display width to keep alignment.
-            cx = cx.saturating_add(w.max(1) as u16);
-        }
-    }
-
-    // Overwrite last visible character with ellipsis when truncated
-    if truncated && ellipsis && clip_end > clip.x {
-        let last = clip_end - 1;
-        if last >= bounds.x
-            && last < bounds.x + bounds.width
-            && y >= bounds.y
-            && y < bounds.y + bounds.height
-        {
-            buf[(last, y)].set_char('\u{2026}');
-            buf[(last, y)].set_style(style);
-        }
-    }
-
-    truncated
 }
 
 /// Render a bordered tooltip box containing `label` anchored at (`anchor_x`, `anchor_y`).
@@ -131,11 +24,7 @@ pub fn render_tooltip_box(
     direction: Direction,
 ) {
     let bounds = *buf.area();
-    let label_width: u16 = label
-        .chars()
-        .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
-        .sum::<usize>() as u16;
-    let content_width = label_width + 2; // 1-char padding each side
+    let content_width = display_width(label) + 2; // 1-char padding each side
     let box_height: u16 = 3; // top border + content + bottom border
 
     let (tooltip_x, box_width) = match direction {
@@ -172,7 +61,7 @@ pub fn render_tooltip_box(
     // Clear background
     for dy in 0..box_height {
         for dx in 0..box_width {
-            set_cell_if(
+            set_cell(
                 buf,
                 &bounds,
                 tooltip_x + dx,
@@ -184,11 +73,11 @@ pub fn render_tooltip_box(
     }
 
     // Top: ╭─...─╮
-    set_cell_if(buf, &bounds, tooltip_x, tooltip_y, '╭', border_style);
+    set_cell(buf, &bounds, tooltip_x, tooltip_y, '╭', border_style);
     for dx in 1..box_width - 1 {
-        set_cell_if(buf, &bounds, tooltip_x + dx, tooltip_y, '─', border_style);
+        set_cell(buf, &bounds, tooltip_x + dx, tooltip_y, '─', border_style);
     }
-    set_cell_if(
+    set_cell(
         buf,
         &bounds,
         tooltip_x + box_width - 1,
@@ -199,8 +88,8 @@ pub fn render_tooltip_box(
 
     // Middle: │ text │
     let mid_y = tooltip_y + 1;
-    set_cell_if(buf, &bounds, tooltip_x, mid_y, '│', border_style);
-    set_cell_if(
+    set_cell(buf, &bounds, tooltip_x, mid_y, '│', border_style);
+    set_cell(
         buf,
         &bounds,
         tooltip_x + box_width - 1,
@@ -211,7 +100,7 @@ pub fn render_tooltip_box(
 
     // Fill middle row background
     for dx in 1..box_width - 1 {
-        set_cell_if(buf, &bounds, tooltip_x + dx, mid_y, ' ', text_style);
+        set_cell(buf, &bounds, tooltip_x + dx, mid_y, ' ', text_style);
     }
 
     // Write the label text (clipped to box interior)
@@ -228,11 +117,11 @@ pub fn render_tooltip_box(
 
     // Bottom: ╰─...─╯
     let bot_y = tooltip_y + 2;
-    set_cell_if(buf, &bounds, tooltip_x, bot_y, '╰', border_style);
+    set_cell(buf, &bounds, tooltip_x, bot_y, '╰', border_style);
     for dx in 1..box_width - 1 {
-        set_cell_if(buf, &bounds, tooltip_x + dx, bot_y, '─', border_style);
+        set_cell(buf, &bounds, tooltip_x + dx, bot_y, '─', border_style);
     }
-    set_cell_if(
+    set_cell(
         buf,
         &bounds,
         tooltip_x + box_width - 1,

@@ -1,7 +1,7 @@
 use ratatui::buffer::Buffer;
 use ratatui::style::Style;
-use unicode_width::UnicodeWidthChar;
 
+use crate::ui::cells::{display_width, set_cell, write_str};
 use crate::ui::icons::Icons;
 use crate::ui::popup;
 use crate::ui::theme;
@@ -23,7 +23,7 @@ pub fn render_label(
         icons.unselected
     };
 
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         left,
@@ -31,7 +31,7 @@ pub fn render_label(
         marker,
         theme::field_marker_style(selected),
     );
-    popup::set_cell(
+    set_cell(
         buf,
         &bounds,
         left + 1,
@@ -39,7 +39,7 @@ pub fn render_label(
         ' ',
         Style::default().bg(theme::BG),
     );
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         label_x,
@@ -61,7 +61,7 @@ pub fn render_value(
     let bounds = *buf.area();
     let max_w = (right - value_x) as usize;
     let display = popup::truncate_str(value, max_w);
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         value_x,
@@ -83,7 +83,7 @@ pub fn render_editing(
     let bounds = *buf.area();
     let max_w = (right - value_x) as usize;
     let display = popup::truncate_str(text, max_w.saturating_sub(1));
-    popup::write_str(
+    write_str(
         buf,
         &bounds,
         value_x,
@@ -92,12 +92,8 @@ pub fn render_editing(
         theme::edit_text_style(),
     );
     if cursor_visible {
-        let cursor_x = value_x
-            + display
-                .chars()
-                .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
-                .sum::<usize>() as u16;
-        popup::set_cell(buf, &bounds, cursor_x, row, '_', theme::edit_cursor_style());
+        let cursor_x = value_x + display_width(&display);
+        set_cell(buf, &bounds, cursor_x, row, '_', theme::edit_cursor_style());
     }
 }
 
@@ -114,8 +110,8 @@ pub fn render_cycle_selector(
     let arrow_s = theme::field_arrow_style(selected);
     let val_s = theme::field_value_style(selected);
 
-    popup::write_str(buf, &bounds, value_x, row, icons.arrow_left, arrow_s);
-    popup::set_cell(
+    write_str(buf, &bounds, value_x, row, icons.arrow_left, arrow_s);
+    set_cell(
         buf,
         &bounds,
         value_x + 1,
@@ -124,15 +120,10 @@ pub fn render_cycle_selector(
         Style::default().bg(theme::BG),
     );
 
-    popup::write_str(buf, &bounds, value_x + 2, row, value, val_s);
+    write_str(buf, &bounds, value_x + 2, row, value, val_s);
 
-    let end_x = value_x
-        + 2
-        + value
-            .chars()
-            .map(|c| UnicodeWidthChar::width(c).unwrap_or(0))
-            .sum::<usize>() as u16;
-    popup::set_cell(
+    let end_x = value_x + 2 + display_width(value);
+    set_cell(
         buf,
         &bounds,
         end_x,
@@ -140,5 +131,5 @@ pub fn render_cycle_selector(
         ' ',
         Style::default().bg(theme::BG),
     );
-    popup::write_str(buf, &bounds, end_x + 1, row, icons.arrow_right, arrow_s);
+    write_str(buf, &bounds, end_x + 1, row, icons.arrow_right, arrow_s);
 }

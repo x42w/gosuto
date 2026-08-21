@@ -2,6 +2,7 @@ use ratatui::Frame;
 use ratatui::style::{Modifier, Style};
 
 use crate::app::App;
+use crate::ui::cells::{set_cell, write_str};
 use crate::ui::popup;
 use crate::ui::theme;
 
@@ -182,30 +183,30 @@ fn render_root(frame: &mut Frame, phase: f32) {
 
     // Categories: two columns
     // Row 1: r Room, c Call
-    popup::set_cell(buf, &bounds, left, y, 'r', key_style);
-    popup::write_str(buf, &bounds, left + 4, y, "Room", label_style);
-    popup::set_cell(buf, &bounds, col2, y, 'c', key_style);
-    popup::write_str(buf, &bounds, col2 + 4, y, "Call", label_style);
+    set_cell(buf, &bounds, left, y, 'r', key_style);
+    write_str(buf, &bounds, left + 4, y, "Room", label_style);
+    set_cell(buf, &bounds, col2, y, 'c', key_style);
+    write_str(buf, &bounds, col2 + 4, y, "Call", label_style);
     y += 1;
 
     // Row 2: s Security, e Effects
-    popup::set_cell(buf, &bounds, left, y, 's', key_style);
-    popup::write_str(buf, &bounds, left + 4, y, "Security", label_style);
-    popup::set_cell(buf, &bounds, col2, y, 'e', key_style);
-    popup::write_str(buf, &bounds, col2 + 4, y, "Effects", label_style);
+    set_cell(buf, &bounds, left, y, 's', key_style);
+    write_str(buf, &bounds, left + 4, y, "Security", label_style);
+    set_cell(buf, &bounds, col2, y, 'e', key_style);
+    write_str(buf, &bounds, col2 + 4, y, "Effects", label_style);
     y += 1;
 
     // Row 3: u User
-    popup::set_cell(buf, &bounds, left, y, 'u', key_style);
-    popup::write_str(buf, &bounds, left + 4, y, "User", label_style);
+    set_cell(buf, &bounds, left, y, 'u', key_style);
+    write_str(buf, &bounds, left + 4, y, "User", label_style);
     y += 1;
     y += 1;
 
     // Actions row: q Quit, l Logout
-    popup::set_cell(buf, &bounds, left, y, 'q', key_style);
-    popup::write_str(buf, &bounds, left + 4, y, "Quit", label_style);
-    popup::set_cell(buf, &bounds, col2, y, 'l', key_style);
-    popup::write_str(buf, &bounds, col2 + 4, y, "Logout", label_style);
+    set_cell(buf, &bounds, left, y, 'q', key_style);
+    write_str(buf, &bounds, left + 4, y, "Quit", label_style);
+    set_cell(buf, &bounds, col2, y, 'l', key_style);
+    write_str(buf, &bounds, col2 + 4, y, "Logout", label_style);
 
     // Hint
     popup::render_hint(buf, &bounds, popup_area, "Esc close");
@@ -254,8 +255,8 @@ fn render_category(cat: WhichKeyCategory, app: &App, frame: &mut Frame, phase: f
         } else {
             (dim_key_style, dim_label_style)
         };
-        popup::set_cell(buf, &bounds, col, row, entry.key, ks);
-        popup::write_str(buf, &bounds, col + 4, row, entry.label, ls);
+        set_cell(buf, &bounds, col, row, entry.key, ks);
+        write_str(buf, &bounds, col + 4, row, entry.label, ls);
     }
 
     // Hint

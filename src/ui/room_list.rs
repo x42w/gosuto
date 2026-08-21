@@ -8,8 +8,8 @@ use ratatui::{
 use crate::app::App;
 use crate::input::FocusPanel;
 use crate::state::{DisplayRow, RoomCategory};
-use crate::ui::cells::display_width;
-use crate::ui::tooltip::{self, Direction, set_cell_if, write_str_clipped};
+use crate::ui::cells::{display_width, set_cell, write_str_clipped};
+use crate::ui::tooltip::{self, Direction};
 use crate::ui::{gradient, panel, theme};
 
 pub struct RoomListAnimState {
@@ -128,11 +128,7 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
         };
         let text = format!("Loading rooms{dots}");
         let style = theme::dim_style();
-        let text_width: u16 = text
-            .chars()
-            .map(|c| unicode_width::UnicodeWidthChar::width(c).unwrap_or(0))
-            .sum::<usize>() as u16;
-        let x = inner.x + inner.width.saturating_sub(text_width) / 2;
+        let x = inner.x + inner.width.saturating_sub(display_width(&text)) / 2;
         let y = inner.y + inner.height / 2;
         let buf = frame.buffer_mut();
         write_str_clipped(buf, x, y, &text, style, &inner, false);
@@ -171,7 +167,7 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                 let line_style = Style::default().fg(theme::DIM).bg(theme::SIDEBAR_BG);
                 let text_end = inner.x + 1 + display_width(&text);
                 for x in text_end..inner.x + inner.width {
-                    set_cell_if(buf, &bounds, x, y, '─', line_style);
+                    set_cell(buf, &bounds, x, y, '─', line_style);
                 }
             }
             DisplayRow::SpaceHeader {
@@ -199,7 +195,7 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                     gradient::fill_row_highlight(buf, bounds, y, inner.x, inner.width, true);
                 } else if is_selected {
                     for x in inner.x..inner.x + inner.width {
-                        set_cell_if(buf, &bounds, x, y, ' ', style);
+                        set_cell(buf, &bounds, x, y, ' ', style);
                     }
                 }
 
@@ -245,7 +241,7 @@ pub fn render(app: &App, frame: &mut Frame, area: Rect) {
                         gradient::fill_row_highlight(buf, bounds, y, inner.x, inner.width, true);
                     } else if is_selected {
                         for x in inner.x..inner.x + inner.width {
-                            set_cell_if(buf, &bounds, x, y, ' ', style);
+                            set_cell(buf, &bounds, x, y, ' ', style);
                         }
                     }
 

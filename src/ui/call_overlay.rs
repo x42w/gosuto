@@ -3,6 +3,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
+use crate::ui::cells::display_width;
 use crate::ui::effects::{TextReveal, Xorshift64};
 use crate::ui::icons::Icons;
 use crate::ui::popup;
@@ -245,17 +246,28 @@ impl TransmissionPopup {
             title.to_string()
         };
 
-        // Text reveal effect
+        // Text reveal effect — step by display width so wide chars
+        // (CJK, emoji) don't overwrite each other.
         let revealed_chars = self.title_reveal.render_chars(&display_title);
-        for (i, ch) in revealed_chars.into_iter().enumerate() {
-            let x = title_start + i as u16;
-            if x >= area.x + area.width - 1 {
+        let mut cx = title_start;
+        for ch in revealed_chars {
+            if cx >= area.x + area.width - 1 {
                 break;
             }
-            popup::set_cell(buf, bounds, x, area.y, ch, title_s);
+            let w = unicode_width::UnicodeWidthChar::width(ch).unwrap_or(0);
+            if w > 1 && cx + 1 >= area.x + area.width - 1 {
+                break; // don't start a wide char at the edge
+            }
+            popup::set_cell(buf, bounds, cx, area.y, ch, title_s);
+            if w > 1 {
+                popup::set_cell(buf, bounds, cx + 1, area.y, ' ', title_s);
+                cx += 2;
+            } else if w != 0 {
+                cx += 1;
+            }
         }
 
-        let bracket_r_space = title_start + display_title.len() as u16;
+        let bracket_r_space = title_start + display_width(&display_title);
         let bracket_r = bracket_r_space + 1;
         popup::set_cell(buf, bounds, bracket_r_space, area.y, ' ', border_s);
         if bracket_r < area.x + area.width - 1 {

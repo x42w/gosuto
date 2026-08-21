@@ -1,6 +1,7 @@
 pub mod animation;
 pub mod audio_settings;
 pub mod call_overlay;
+pub mod cells;
 pub mod change_password;
 pub mod chat;
 pub mod completion_popup;

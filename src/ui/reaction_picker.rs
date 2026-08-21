@@ -4,6 +4,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
 
 use crate::app::{App, QUICK_EMOJIS};
+use crate::ui::cells::display_width;
 use crate::ui::emoji_data::{EmojiCategory, filtered_emojis};
 use crate::ui::{popup, theme};
 
@@ -114,7 +115,7 @@ pub fn render(app: &App, frame: &mut Frame) {
         popup::write_str(
             buf,
             &bounds,
-            popup_rect.x + MARGIN + label.len() as u16,
+            popup_rect.x + MARGIN + display_width(label),
             filter_y,
             &picker.filter,
             if picker.filter_active {
@@ -125,7 +126,8 @@ pub fn render(app: &App, frame: &mut Frame) {
         );
         if picker.filter_active {
             // Cursor indicator
-            let cursor_x = popup_rect.x + MARGIN + label.len() as u16 + picker.filter.len() as u16;
+            let cursor_x =
+                popup_rect.x + MARGIN + display_width(label) + display_width(&picker.filter);
             popup::write_str(buf, &bounds, cursor_x, filter_y, "_", theme::text_style());
         }
     }

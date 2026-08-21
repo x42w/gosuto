@@ -4,6 +4,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 
 use crate::state::AudioSettingsState;
+use crate::ui::cells::display_width;
 use crate::ui::icons::Icons;
 use crate::ui::{form_field, gradient, popup, theme};
 
@@ -176,7 +177,7 @@ fn render_device_selector(
     let display = popup::truncate_str(name, max_name_w);
     popup::write_str(buf, &bounds, x + 2, row, &display, name_s);
 
-    let end_x = x + 2 + display.chars().count() as u16;
+    let end_x = x + 2 + display_width(&display);
     popup::set_cell(
         buf,
         &bounds,
